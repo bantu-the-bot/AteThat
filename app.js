@@ -131,7 +131,25 @@ async function extractStudyItems() {
     }
   }
 
-  if (!key) return setStatus("Enter Gemini API key first (or paste term/answer pairs like 'hola - hello').");
+  // Local file parsing for CSV/TXT (no API needed)
+  if (file && (file.type.includes("csv") || file.type.includes("text") || file.name.toLowerCase().endsWith(".csv") || file.name.toLowerCase().endsWith(".txt"))) {
+    try {
+      const fileText = await readFileAsText(file);
+      const parsed = file.name.toLowerCase().endsWith(".csv")
+        ? parsePairsFromCsv(fileText)
+        : parsePairsFromText(fileText);
+      if (parsed.length >= 1) {
+        extractedItems = parsed;
+        renderItems();
+        return setStatus(`Extracted ${extractedItems.length} items from ${file.name} (local parser).`);
+      }
+      setStatus(`Could not parse ${file.name} locally. Trying Gemini...`);
+    } catch (e) {
+      setStatus(`Could not read ${file.name}: ${e.message}. Trying Gemini...`);
+    }
+  }
+
+  if (!key) return setStatus("Enter Gemini API key first (or use CSV/TXT term-answer format). Example: hola,hello");
 
   els.extractBtn.disabled = true;
   setStatus("Extracting items with Gemini...");
@@ -343,12 +361,46 @@ function parsePairsFromText(text) {
   return out;
 }
 
+function parsePairsFromCsv(text) {
+  const lines = String(text || "").split(/\r?\n/).filter(Boolean);
+  const out = [];
+  for (const line of lines) {
+    // Basic CSV split (supports simple quoted values)
+    const cols = line.match(/\s*(?:"([^"]*(?:""[^"]*)*)"|([^,]*))\s*(?:,|$)/g) || [];
+    const cleaned = cols
+      .map(c => c.replace(/,$/, "").trim())
+      .map(c => c.startsWith('"') && c.endsWith('"') ? c.slice(1, -1).replace(/""/g, '"') : c)
+      .filter(c => c.length > 0);
+
+    if (cleaned.length < 2) continue;
+    const term = cleaned[0].trim();
+    const answer = cleaned.slice(1).join(", ").trim();
+    if (!term || !answer) continue;
+
+    // skip likely header row
+    const head = `${term}`.toLowerCase();
+    if (["term", "question", "spanish", "word"].includes(head)) continue;
+
+    out.push({ term, answer });
+  }
+  return out;
+}
+
 function fileToBase64(file) {
   return new Promise((resolve, reject) => {
     const r = new FileReader();
     r.onload = () => resolve(String(r.result).split(",")[1]);
     r.onerror = reject;
     r.readAsDataURL(file);
+  });
+}
+
+function readFileAsText(file) {
+  return new Promise((resolve, reject) => {
+    const r = new FileReader();
+    r.onload = () => resolve(String(r.result || ""));
+    r.onerror = reject;
+    r.readAsText(file);
   });
 }
 
