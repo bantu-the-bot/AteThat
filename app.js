@@ -13,6 +13,7 @@ const els = {
   addItemBtn: document.getElementById("addItemBtn"),
   saveSetBtn: document.getElementById("saveSetBtn"),
   setSelect: document.getElementById("setSelect"),
+  questionCount: document.getElementById("questionCount"),
   startQuizBtn: document.getElementById("startQuizBtn"),
   quizBox: document.getElementById("quizBox"),
   quizProgress: document.getElementById("quizProgress"),
@@ -21,6 +22,7 @@ const els = {
   quizAnswer: document.getElementById("quizAnswer"),
   submitAnswerBtn: document.getElementById("submitAnswerBtn"),
   skipBtn: document.getElementById("skipBtn"),
+  nextQuestionBtn: document.getElementById("nextQuestionBtn"),
   feedback: document.getElementById("feedback"),
   summary: document.getElementById("summary"),
   status: document.getElementById("status"),
@@ -56,6 +58,7 @@ function init() {
   els.startQuizBtn.onclick = startQuiz;
   els.submitAnswerBtn.onclick = submitAnswer;
   els.skipBtn.onclick = skipQuestion;
+  els.nextQuestionBtn.onclick = nextQuestion;
 }
 
 function setStatus(msg) { els.status.textContent = msg; }
@@ -202,7 +205,10 @@ function startQuiz() {
   const set = sets[idx];
   if (!set) return setStatus("No set selected.");
 
-  const items = shuffle([...set.items]).slice(0, 10);
+  const requested = Number(els.questionCount.value || 10);
+  const qCount = Math.max(1, Math.min(requested, set.items.length));
+
+  const items = shuffle([...set.items]).slice(0, qCount);
   const questions = items.map((it, i) => {
     const type = i % 3 === 0 ? "mcq" : "typed";
     if (type === "mcq") {
@@ -213,10 +219,11 @@ function startQuiz() {
     return { type, prompt: `Type the meaning for: ${it.term}`, answer: it.answer, source: it };
   });
 
-  quiz = { setName: set.name, questions, i: 0, correct: 0, total: 0, missed: [] };
+  quiz = { setName: set.name, questions, i: 0, correct: 0, total: 0, missed: [], locked: false };
   els.summary.classList.add("hidden");
   els.quizBox.classList.remove("hidden");
   els.feedback.textContent = "";
+  els.nextQuestionBtn.classList.add("hidden");
   renderQuestion();
 }
 
@@ -226,6 +233,11 @@ function renderQuestion() {
   els.quizPrompt.textContent = q.prompt;
   els.quizChoices.innerHTML = "";
   els.quizAnswer.value = "";
+  els.feedback.textContent = "";
+  els.nextQuestionBtn.classList.add("hidden");
+  els.submitAnswerBtn.disabled = false;
+  els.skipBtn.disabled = false;
+  quiz.locked = false;
 
   if (q.type === "mcq") {
     q.choices.forEach(c => {
@@ -250,30 +262,38 @@ function submitAnswer() {
 }
 
 function skipQuestion() {
+  if (!quiz || quiz.locked) return;
   const q = quiz.questions[quiz.i];
   quiz.total++;
   quiz.missed.push({ q: q.prompt, answer: q.answer });
   els.feedback.textContent = `⏭️ Skipped. Correct: ${q.answer}`;
-  nextQuestionSoon();
+  lockAndShowNext();
 }
 
 function grade(userAnswer) {
+  if (!quiz || quiz.locked) return;
   const q = quiz.questions[quiz.i];
   quiz.total++;
   const result = friendlyGrade(userAnswer, q.answer);
   if (result.ok) quiz.correct++;
   else quiz.missed.push({ q: q.prompt, answer: q.answer });
   els.feedback.textContent = result.msg;
-  nextQuestionSoon();
+  lockAndShowNext();
 }
 
-function nextQuestionSoon() {
-  setTimeout(() => {
-    quiz.i++;
-    if (quiz.i >= quiz.questions.length) return finishQuiz();
-    renderQuestion();
-    els.feedback.textContent = "";
-  }, 900);
+function lockAndShowNext() {
+  quiz.locked = true;
+  els.submitAnswerBtn.disabled = true;
+  els.skipBtn.disabled = true;
+  els.quizChoices.querySelectorAll("button").forEach(b => { b.disabled = true; });
+  els.nextQuestionBtn.classList.remove("hidden");
+}
+
+function nextQuestion() {
+  if (!quiz) return;
+  quiz.i++;
+  if (quiz.i >= quiz.questions.length) return finishQuiz();
+  renderQuestion();
 }
 
 function finishQuiz() {

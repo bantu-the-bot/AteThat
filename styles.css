@@ -17,5 +17,22 @@ table { width: 100%; border-collapse: collapse; margin-top: 8px; }
 th, td { border-bottom: 1px solid #334155; padding: 8px; text-align: left; }
 .smallBtn { width: auto; padding: 6px 10px; background: #475569; }
 .hidden { display: none; }
-#feedback { min-height: 30px; font-weight: 600; }
+#quizBox {
+  min-height: 360px;
+}
+#quizPrompt {
+  font-size: 1.25rem;
+  line-height: 1.5;
+}
+#quizChoices {
+  display: grid;
+  gap: 8px;
+  margin: 10px 0;
+}
+#feedback {
+  min-height: 58px;
+  font-weight: 600;
+  font-size: 1.05rem;
+  line-height: 1.4;
+}
 pre { white-space: pre-wrap; margin: 0; color: #93c5fd; }

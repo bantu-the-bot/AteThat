@@ -56,8 +56,10 @@
       <h2>4) Practice</h2>
       <label>Saved Sets</label>
       <select id="setSelect"></select>
+      <label>Number of questions</label>
+      <input id="questionCount" type="number" min="1" value="10" />
       <div class="row">
-        <button id="startQuizBtn">Start Mixed Quiz (10)</button>
+        <button id="startQuizBtn">Start Mixed Quiz</button>
       </div>
       <div id="quizBox" class="hidden">
         <p id="quizProgress"></p>
@@ -69,6 +71,7 @@
           <button id="skipBtn" class="secondary">Skip</button>
         </div>
         <p id="feedback"></p>
+        <button id="nextQuestionBtn" class="hidden">Next Question ➡️</button>
       </div>
       <div id="summary" class="hidden"></div>
     </section>
