@@ -1,0 +1,84 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>AteThat — Study Guide to Quiz</title>
+  <link rel="stylesheet" href="./styles.css" />
+</head>
+<body>
+  <header>
+    <h1>🍽️ AteThat</h1>
+    <p>Turn study guides into friendly practice quizzes.</p>
+  </header>
+
+  <main>
+    <section class="card">
+      <h2>1) AI Setup</h2>
+      <label>Gemini API Key</label>
+      <input id="apiKey" type="password" placeholder="AIza..." />
+      <div class="row">
+        <button id="saveKeyBtn">Save Key (local)</button>
+        <button id="clearKeyBtn" class="secondary">Clear</button>
+      </div>
+      <p class="hint">Get key from <a href="https://aistudio.google.com/" target="_blank" rel="noreferrer">Google AI Studio</a>.</p>
+    </section>
+
+    <section class="card">
+      <h2>2) Add Study Content</h2>
+      <label>Upload image / PDF / text</label>
+      <input id="fileInput" type="file" accept=".txt,.csv,.pdf,image/*" />
+
+      <label>Or paste notes</label>
+      <textarea id="rawText" rows="6" placeholder="Paste vocab, definitions, study guide text..."></textarea>
+
+      <div class="row">
+        <button id="extractBtn">Extract Study Items</button>
+      </div>
+      <p class="hint">Tip: You can edit the extracted items before creating quiz.</p>
+    </section>
+
+    <section class="card">
+      <h2>3) Review Extracted Items</h2>
+      <table id="itemsTable">
+        <thead>
+          <tr><th>Term / Question</th><th>Answer / Meaning</th><th></th></tr>
+        </thead>
+        <tbody></tbody>
+      </table>
+      <div class="row">
+        <button id="addItemBtn" class="secondary">+ Add Item</button>
+        <button id="saveSetBtn">Save Study Set</button>
+      </div>
+    </section>
+
+    <section class="card">
+      <h2>4) Practice</h2>
+      <label>Saved Sets</label>
+      <select id="setSelect"></select>
+      <div class="row">
+        <button id="startQuizBtn">Start Mixed Quiz (10)</button>
+      </div>
+      <div id="quizBox" class="hidden">
+        <p id="quizProgress"></p>
+        <h3 id="quizPrompt"></h3>
+        <div id="quizChoices"></div>
+        <input id="quizAnswer" type="text" placeholder="Type your answer" />
+        <div class="row">
+          <button id="submitAnswerBtn">Submit</button>
+          <button id="skipBtn" class="secondary">Skip</button>
+        </div>
+        <p id="feedback"></p>
+      </div>
+      <div id="summary" class="hidden"></div>
+    </section>
+
+    <section class="card">
+      <h2>Status</h2>
+      <pre id="status">Ready.</pre>
+    </section>
+  </main>
+
+  <script src="./app.js"></script>
+</body>
+</html>

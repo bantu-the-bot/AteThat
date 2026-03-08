@@ -1,0 +1,21 @@
+* { box-sizing: border-box; }
+body { font-family: Inter, system-ui, Arial, sans-serif; margin: 0; background: #0f172a; color: #e2e8f0; }
+header { padding: 24px; background: #111827; border-bottom: 1px solid #334155; }
+header h1 { margin: 0; }
+header p { margin: 8px 0 0; color: #94a3b8; }
+main { max-width: 920px; margin: 20px auto; padding: 0 16px 32px; display: grid; gap: 16px; }
+.card { background: #111827; border: 1px solid #334155; border-radius: 14px; padding: 16px; }
+label { display: block; margin: 10px 0 6px; color: #cbd5e1; }
+input, textarea, select, button { width: 100%; padding: 10px; border-radius: 10px; border: 1px solid #334155; background: #0b1220; color: #e2e8f0; }
+textarea { resize: vertical; }
+button { background: #2563eb; border: none; font-weight: 600; cursor: pointer; }
+button.secondary { background: #334155; }
+button:disabled { opacity: .6; cursor: not-allowed; }
+.row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 10px; }
+.hint { color: #94a3b8; font-size: .9rem; }
+table { width: 100%; border-collapse: collapse; margin-top: 8px; }
+th, td { border-bottom: 1px solid #334155; padding: 8px; text-align: left; }
+.smallBtn { width: auto; padding: 6px 10px; background: #475569; }
+.hidden { display: none; }
+#feedback { min-height: 30px; font-weight: 600; }
+pre { white-space: pre-wrap; margin: 0; color: #93c5fd; }
