@@ -1,4 +1,4 @@
-const GEMINI_MODEL = "gemini-1.5-flash";
+const GEMINI_MODEL = "gemini-2.0-flash";
 const STORAGE_KEY = "atethat_sets_v1";
 const KEY_STORAGE = "atethat_api_key";
 
@@ -118,9 +118,22 @@ async function extractStudyItems() {
   const text = els.rawText.value.trim();
   const file = els.fileInput.files[0];
 
-  if (!key) return setStatus("Enter Gemini API key first.");
   if (!text && !file) return setStatus("Add pasted text or upload a file first.");
 
+  // Fast local parse fallback for plain pasted lists like:
+  // term - answer OR term: answer OR term,answer
+  if (text && !file) {
+    const quick = parsePairsFromText(text);
+    if (quick.length >= 2) {
+      extractedItems = quick;
+      renderItems();
+      return setStatus(`Extracted ${extractedItems.length} items from pasted text (local parser).`);
+    }
+  }
+
+  if (!key) return setStatus("Enter Gemini API key first (or paste term/answer pairs like 'hola - hello').");
+
+  els.extractBtn.disabled = true;
   setStatus("Extracting items with Gemini...");
 
   try {
@@ -137,7 +150,7 @@ async function extractStudyItems() {
     const data = await callGemini(key, parts);
     const raw = extractTextFromGemini(data);
     const parsed = tryParseJsonArray(raw);
-    if (!parsed.length) throw new Error("No items extracted");
+    if (!parsed.length) throw new Error("No items extracted from model response.");
 
     extractedItems = parsed
       .map(x => ({ term: String(x.term || "").trim(), answer: String(x.answer || "").trim() }))
@@ -147,6 +160,8 @@ async function extractStudyItems() {
     setStatus(`Extracted ${extractedItems.length} items. Review/edit, then save set.`);
   } catch (e) {
     setStatus(`Extraction failed: ${e.message}`);
+  } finally {
+    els.extractBtn.disabled = false;
   }
 }
 
@@ -155,7 +170,10 @@ function saveCurrentSet() {
   if (!valid.length) return setStatus("No valid items to save.");
   const name = prompt("Set name?", `Set ${new Date().toLocaleString()}`);
   if (!name) return;
-  sets.unshift({ id: crypto.randomUUID(), name, items: valid, createdAt: Date.now() });
+  const id = (globalThis.crypto && crypto.randomUUID)
+    ? crypto.randomUUID()
+    : `set_${Date.now()}_${Math.floor(Math.random() * 1e6)}`;
+  sets.unshift({ id, name, items: valid, createdAt: Date.now() });
   saveSets();
   refreshSetsDropdown();
   setStatus(`Saved set \"${name}\" with ${valid.length} items.`);
@@ -298,6 +316,31 @@ function tryParseJsonArray(raw) {
     try { return JSON.parse(raw.slice(s, e + 1)); } catch {}
   }
   return [];
+}
+
+function parsePairsFromText(text) {
+  const lines = String(text || "").split(/\r?\n/);
+  const out = [];
+
+  for (const line of lines) {
+    const trimmed = line.trim();
+    if (!trimmed) continue;
+
+    const sep = trimmed.includes(" - ") ? " - "
+      : trimmed.includes(":") ? ":"
+      : trimmed.includes(",") ? ","
+      : null;
+
+    if (!sep) continue;
+    const parts = trimmed.split(sep);
+    if (parts.length < 2) continue;
+
+    const term = parts[0].trim();
+    const answer = parts.slice(1).join(sep).trim();
+    if (term && answer) out.push({ term, answer });
+  }
+
+  return out;
 }
 
 function fileToBase64(file) {
